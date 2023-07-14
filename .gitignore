@@ -2,6 +2,7 @@
 .vscode/
 
 data/exp_result_DEFCM/*
+data/raw/*
 
 image/*
 log/*
