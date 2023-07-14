@@ -1,0 +1,9 @@
+.venv/
+.vscode/
+
+data/exp_result_DEFCM/*
+
+image/*
+log/*
+
+.DS_Store
