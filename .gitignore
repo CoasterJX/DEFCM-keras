@@ -1,7 +1,7 @@
 .venv/
 .vscode/
 
-data/exp_result_DEFCM/*
+data/exp_result_*
 
 image/*
 log/*

@@ -89,11 +89,9 @@ class DEFCM:
     
 
     def compile(self, optimizer='sgd', loss='kld'):
-        c_loss = loss if not self._idefcm else {
-            'clustering': 'kld',
-            'decoder_0': 'mse'
-        }
-        self.model.compile(optimizer=optimizer, loss=c_loss, loss_weights=[0.1, 1] if self._idefcm else None)
+        c_loss = loss if not self._idefcm else 'mse'
+        # self.model.compile(optimizer=optimizer, loss=c_loss, loss_weights=[0.1, 1] if self._idefcm else None)
+        self.model.compile(optimizer=optimizer, loss=c_loss)
         plot_model(self.model, to_file="../image/model-structure.png", show_shapes=True)
 
     

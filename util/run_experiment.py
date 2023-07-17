@@ -15,14 +15,14 @@ EXP_GROUP = {
     'test_data': ['mnist'],
     # 'fuzzifier': [round(x, 1) for x in np.arange(1.1, 1.7, 0.1)],
     'trials': list(range(1)),
-    'learning_rate': [1e-8, 1e-9, 1e-10],
+    'learning_rate': [1e-6, 1e-7, 1e-8],
     # 'M': [1.1, 1.3, 1.5, 1.7, 1.9, 2, 3, 4, 5, 6, 7, 8],
     # 'norm_factor': [2],
     
     'saved_cluster_epochs': [0, 3, 5, 10, 15, 20, 25, 30, 50],
     'summary_config': ('facc', max),
     'new_version': True,
-    'idefcm': False
+    'idefcm': True
 }
 
 

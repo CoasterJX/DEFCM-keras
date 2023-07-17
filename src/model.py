@@ -2,16 +2,17 @@ import tensorflow as tf
 import sys
 
 from keras.models import Model
+import keras.losses as KL
 
 class DeepFuzzyCMeanModel(Model):
 
-    def __init__(self, m=2.0, norm_factor=2.0, *args, **kwargs):
+    def __init__(self, m=2.0, norm_factor=2.0, gamma=0.1, *args, **kwargs):
         super(DeepFuzzyCMeanModel, self).__init__(*args, **kwargs)
         self.m = m
         self.norm_factor = norm_factor
+        self.gamma = gamma
         self.loss_tracker = tf.keras.metrics.Mean(name="loss")
     
-
     # def compile(self, optimizer, loss):
     #     super(DeepFuzzyCMeanModel, self).compile(optimizer=optimizer, loss=loss)
     #     self.clustering_layer.compile(optimizer=optimizer, loss=loss)
@@ -22,6 +23,11 @@ class DeepFuzzyCMeanModel(Model):
         cluster_features = self.get_layer(name='encoder_1')(cluster_features)
         cluster_features = self.get_layer(name='encoder_2')(cluster_features)
         cluster_features = self.get_layer(name='encoder_3')(cluster_features)
+
+        decoded_features = self.get_layer(name='decoder_3')(cluster_features)
+        decoded_features = self.get_layer(name='decoder_2')(decoded_features)
+        decoded_features = self.get_layer(name='decoder_1')(decoded_features)
+        decoded_features = self.get_layer(name='decoder_0')(decoded_features)
 
         @tf.custom_gradient
         def fcm_loss(x, y):
@@ -53,19 +59,17 @@ class DeepFuzzyCMeanModel(Model):
                     (tf.expand_dims(x, axis=1) - v) *
                     (tf.expand_dims(u, axis=2) ** M),
                     axis=0
-                ) * (-2 * A * 0.1)
+                ) * (-2 * A)
                 v_grad = upstream_grad * v_grad
 
                 variables_grad.append(v_grad)
 
-                tf.print("x_grad: ", x_grad[0], output_stream=sys.stdout)
-                tf.print("v_grad: ", v_grad[0], output_stream=sys.stdout)
-
-                return (x_grad, y_grad), variables_grad
+                return (x_grad, y_grad, y_grad), variables_grad
             
             return loss_result, gradient
         
-        loss = fcm_loss(cluster_features, label)
+        # tf.print(self.compiled_loss(features, decoded_features))
+        loss = self.gamma * fcm_loss(cluster_features, label) + self.compiled_loss(features, decoded_features)
 
         return loss
     
