@@ -91,7 +91,7 @@ class DEFCM:
     def compile(self, optimizer='sgd', loss='kld'):
         c_loss = loss if not self._idefcm else 'mse'
         # self.model.compile(optimizer=optimizer, loss=c_loss, loss_weights=[0.1, 1] if self._idefcm else None)
-        self.model.compile(optimizer=optimizer, loss=c_loss)
+        self.model.compile(optimizer=optimizer, loss=c_loss, loss_weights=[1, 1] if self._idefcm else None)
         plot_model(self.model, to_file="../image/model-structure.png", show_shapes=True)
 
     
@@ -215,11 +215,11 @@ class DEFCM:
                         np.round(metrics.acc(y, y_pred), 5),
                         np.round(metrics.nmi(y, y_pred), 5),
                         np.round(metrics.ari(y, y_pred), 5),
-                        np.round(loss, 5),
+                        np.round(loss, 5) if type(loss) is list else np.round([loss], 5),
                         time() - start_time
                     ]
-                    iter_metrics_writer.writerow(dict(iter=ite, acc=acc, nmi=nmi, ari=ari, loss=loss, time=tick))
-                    print(f'Iter {ite} at {tick}s: acc = {acc}, nmi = {nmi}, ari = {ari} | loss = {loss}, delta = {delta_label}')
+                    iter_metrics_writer.writerow(dict(iter=ite, acc=acc, nmi=nmi, ari=ari, loss=loss[0], time=tick))
+                    print(f'Iter {ite} at {tick}s: acc = {acc}, nmi = {nmi}, ari = {ari} | loss = {loss.tolist()}, delta = {delta_label}')
 
                 # stop when tolerance threshold reached
                 if ite > 0 and delta_label < tol:
@@ -240,6 +240,7 @@ class DEFCM:
             # exit()
             # try:
             loss = self.model.train_on_batch(x=x[idx], y=p[idx] if not self._idefcm else [p[idx], x[idx]])
+
             # except Exception as e:
             #     print(e)
             #     e0 = list(self.model.get_layer(name='encoder_0').get_weights())

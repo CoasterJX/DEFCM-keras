@@ -6,12 +6,13 @@ import keras.losses as KL
 
 class DeepFuzzyCMeanModel(Model):
 
-    def __init__(self, m=2.0, norm_factor=2.0, gamma=0.1, *args, **kwargs):
+    def __init__(self, m=2.0, norm_factor=2.0, gamma=0.000001, *args, **kwargs):
         super(DeepFuzzyCMeanModel, self).__init__(*args, **kwargs)
         self.m = m
         self.norm_factor = norm_factor
         self.gamma = gamma
-        self.loss_tracker = tf.keras.metrics.Mean(name="loss")
+        self.c_loss_tracker = tf.keras.metrics.Mean(name="c_loss")
+        self.d_loss_tracker = tf.keras.metrics.Mean(name="d_loss")
     
     # def compile(self, optimizer, loss):
     #     super(DeepFuzzyCMeanModel, self).compile(optimizer=optimizer, loss=loss)
@@ -36,7 +37,7 @@ class DeepFuzzyCMeanModel(Model):
             u = self.get_layer(name='clustering')(cluster_features)
 
             loss_result = tf.reduce_sum(tf.square(tf.expand_dims(x, axis=1) - v), axis=2)
-            loss_result = tf.reduce_sum(u * loss_result)
+            loss_result = tf.reduce_sum((u ** self.m) * loss_result)
             
             def gradient(upstream_grad, variables):
 
@@ -69,9 +70,11 @@ class DeepFuzzyCMeanModel(Model):
             return loss_result, gradient
         
         # tf.print(self.compiled_loss(features, decoded_features))
-        loss = self.gamma * fcm_loss(cluster_features, label) + self.compiled_loss(features, decoded_features)
 
-        return loss
+        cluster_loss = self.gamma * fcm_loss(cluster_features, label)
+        decoder_loss = self.compiled_loss(features, decoded_features)
+
+        return cluster_loss, decoder_loss
     
 
     def train_step(self, data):
@@ -82,5 +85,10 @@ class DeepFuzzyCMeanModel(Model):
         grads = tape.gradient(loss, self.trainable_weights)
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
 
-        self.loss_tracker.update_state(loss)
-        return {"loss": self.loss_tracker.result()}
+        c_loss, d_loss = loss
+        self.c_loss_tracker.update_state(c_loss)
+        self.d_loss_tracker.update_state(d_loss)
+        return {
+            "c_loss": self.c_loss_tracker.result(),
+            "d_loss": self.d_loss_tracker.result()
+        }

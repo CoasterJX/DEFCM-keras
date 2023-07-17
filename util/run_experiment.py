@@ -15,7 +15,7 @@ EXP_GROUP = {
     'test_data': ['mnist'],
     # 'fuzzifier': [round(x, 1) for x in np.arange(1.1, 1.7, 0.1)],
     'trials': list(range(1)),
-    'learning_rate': [1e-6, 1e-7, 1e-8],
+    'learning_rate': [1e-1],
     # 'M': [1.1, 1.3, 1.5, 1.7, 1.9, 2, 3, 4, 5, 6, 7, 8],
     # 'norm_factor': [2],
     
